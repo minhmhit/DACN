@@ -1,0 +1,2 @@
+rocksdict>=0.3.23
+numpy>=1.26.0

@@ -1,0 +1,40 @@
+# RocksDB (LSM) — dùng với run_rocksdb_benchmark.py
+#
+# RocksDB không phải server SQL: engine chạy trong process Python (rocksdict).
+# Compose này cung cấp container Python có sẵn rocksdict + numpy để chạy benchmark
+# mà không cần cài native lib trên máy host.
+#
+# Chạy benchmark trong container:
+#   docker compose run --rm bench
+#
+# Máy yếu (ít data hơn):
+#   docker compose run --rm -e NUM_USERS=50000 -e NUM_ORDERS=200000 -e NUM_ACTIVITIES=500000 \
+#     -e WARMUP_RUNS=50 -e MEASURE_RUNS=300 bench
+#
+# Kết quả ghi ra ./benchmark_results_rocksdb trên máy host (volume mount).
+#
+# Không cần service Postgres ở file này.
+
+name: indexing-rocksdb-bench
+
+services:
+  bench:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: indexing-rocksdb-bench
+    environment:
+      NUM_USERS: ${NUM_USERS:-200000}
+      NUM_ORDERS: ${NUM_ORDERS:-1000000}
+      NUM_ACTIVITIES: ${NUM_ACTIVITIES:-2000000}
+      WARMUP_RUNS: ${WARMUP_RUNS:-100}
+      MEASURE_RUNS: ${MEASURE_RUNS:-800}
+      ROCKSDB_DATA_DIR: /data/rocksdb_data
+      ROCKSDB_RESULT_DIR: /data/benchmark_results_rocksdb
+      REUSE_EXISTING: ${REUSE_EXISTING:-0}
+    volumes:
+      # Script + results + DB files trên host
+      - ./run_rocksdb_benchmark.py:/app/run_rocksdb_benchmark.py:ro
+      - ./rocksdb_data:/data/rocksdb_data
+      - ./benchmark_results_rocksdb:/data/benchmark_results_rocksdb
+    working_dir: /app

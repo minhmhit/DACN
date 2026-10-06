@@ -1,0 +1,55 @@
+# PostgreSQL (B-Tree) — dùng với run_postgres_benchmark.py
+#
+# Chạy:
+#   docker compose up -d
+#   docker compose ps          # đợi healthy
+#   export PGHOST=localhost PGPORT=5432 PGUSER=research PGPASSWORD=research PGDATABASE=indexing_research
+#   export MAX_USER_ID=20000
+#   python run_postgres_benchmark.py
+#
+# Vào psql:
+#   docker compose exec postgres psql -U research -d indexing_research
+#
+# Xóa sạch data (seed lại từ đầu):
+#   docker compose down -v
+
+name: indexing-postgres-bench
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: indexing-postgres-bench
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: research
+      POSTGRES_PASSWORD: research
+      POSTGRES_DB: indexing_research
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_bench_data:/var/lib/postgresql/data
+      - ./docker/init:/docker-entrypoint-initdb.d:ro
+    command:
+      - postgres
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - effective_cache_size=1GB
+      - -c
+      - work_mem=16MB
+      - -c
+      - random_page_cost=1.1
+      - -c
+      - track_io_timing=on
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U research -d indexing_research"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
+    shm_size: 256mb
+
+volumes:
+  postgres_bench_data:
