@@ -3,4 +3,9 @@ reports/
 *.md
 .venv/
 __pycache__/
-*.pyc
+*.pyc
+src/rocksdb_exp/rdb_benchmark
+*.so
+*.o
+*.exe
+

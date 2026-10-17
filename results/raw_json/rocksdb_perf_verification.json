@@ -1,0 +1,52 @@
+{
+  "metadata": {
+    "timestamp": "2026-10-17T20:03:24+0700",
+    "num_rows": 500000,
+    "num_queries": 1000,
+    "workload": "Zipfian s=0.99",
+    "engine": "RocksDB 9.10 (Leveled Compaction, 10-bit Prefix BloomFilter)"
+  },
+  "k_opt": {
+    "key_type": "k_opt",
+    "num_queries": 1000,
+    "distribution": "zipfian",
+    "throughput_ops": 15963.2,
+    "latency_p50_ms": 0.0428,
+    "latency_p95_ms": 0.141,
+    "latency_p99_ms": 0.2355,
+    "latency_max_ms": 0.3471,
+    "latency_mean_ms": 0.061947,
+    "total_key_comparisons": 58326,
+    "avg_key_comparisons": 58,
+    "total_block_reads": 1835,
+    "avg_block_reads": 1.835,
+    "total_cache_hits": 3003,
+    "total_bloom_sst_hits": 4818,
+    "total_bloom_sst_misses": 182
+  },
+  "k_inv": {
+    "key_type": "k_inv",
+    "num_queries": 1000,
+    "distribution": "zipfian",
+    "throughput_ops": 176.403,
+    "latency_p50_ms": 4.4304,
+    "latency_p95_ms": 12.7542,
+    "latency_p99_ms": 17.9997,
+    "latency_max_ms": 25.488,
+    "latency_mean_ms": 5.66585,
+    "total_key_comparisons": 19833953,
+    "avg_key_comparisons": 19833,
+    "total_block_reads": 28308,
+    "avg_block_reads": 28.308,
+    "total_cache_hits": 238097,
+    "total_bloom_sst_hits": 1384,
+    "total_bloom_sst_misses": 0
+  },
+  "comparison": {
+    "p50_ratio": 103.51,
+    "p95_ratio": 90.46,
+    "p99_ratio": 76.43,
+    "key_comparisons_ratio": 341.95,
+    "block_reads_ratio": 15.43
+  }
+}
