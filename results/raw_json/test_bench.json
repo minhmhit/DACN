@@ -1,0 +1,23 @@
+{
+  "system": "RocksDB",
+  "workload": "Workload_C",
+  "variant": "k_opt",
+  "threads": 1,
+  "elapsed_sec": 2.000153,
+  "read_ops": 133551,
+  "write_ops": 0,
+  "total_throughput_ops": 66770.383085,
+  "read_throughput_ops": 66770.383085,
+  "write_throughput_ops": 0.000000,
+  "p50_ms": 0.008100,
+  "p95_ms": 0.028900,
+  "p99_ms": 0.075500,
+  "p999_ms": 0.276500,
+  "max_ms": 40.247604,
+  "mean_ms": 0.014717,
+  "stddev_ms": 0.175504,
+  "variance_ms2": 0.030802,
+  "timeseries": [
+    {"second_idx": 1, "read_p50_ms": 0.007400, "read_p95_ms": 0.028300, "read_p99_ms": 0.077300, "read_ops": 80343, "write_ops": 0}
+  ]
+}

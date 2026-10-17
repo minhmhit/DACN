@@ -1,0 +1,26 @@
+{
+  "system": "RocksDB",
+  "workload": "Workload_A",
+  "variant": "k_inv",
+  "threads": 8,
+  "elapsed_sec": 4.000071,
+  "read_ops": 2314,
+  "write_ops": 2279,
+  "total_throughput_ops": 1148.229723,
+  "read_throughput_ops": 578.489784,
+  "write_throughput_ops": 569.739939,
+  "p50_ms": 7.475699,
+  "p95_ms": 50.611394,
+  "p99_ms": 58.545494,
+  "p999_ms": 69.052692,
+  "max_ms": 75.239392,
+  "mean_ms": 13.705020,
+  "stddev_ms": 15.137783,
+  "variance_ms2": 229.152480,
+  "timeseries": [
+    {"second_idx": 1, "read_p50_ms": 0.000000, "read_p95_ms": 0.000000, "read_p99_ms": 0.000000, "read_ops": 0, "write_ops": 0},
+    {"second_idx": 2, "read_p50_ms": 7.373199, "read_p95_ms": 52.226994, "read_p99_ms": 54.798293, "read_ops": 583, "write_ops": 512},
+    {"second_idx": 3, "read_p50_ms": 7.366600, "read_p95_ms": 49.677994, "read_p99_ms": 50.296194, "read_ops": 581, "write_ops": 547},
+    {"second_idx": 4, "read_p50_ms": 7.672099, "read_p95_ms": 54.649293, "read_p99_ms": 62.599693, "read_ops": 561, "write_ops": 603}
+  ]
+}

@@ -21,6 +21,9 @@
 #include <cmath>
 #include <random>
 #include <sstream>
+#include <thread>
+#include <mutex>
+#include <atomic>
 
 #include <rocksdb/db.h>
 #include <rocksdb/options.h>
@@ -422,9 +425,299 @@ int DoQuery(const std::string& db_path, const std::string& key_type, uint32_t nu
     return 0;
 }
 
+// Multi-Threaded Mixed Workload Benchmark Function
+struct TimeSeriesRecord {
+    int second_idx;
+    double read_p50_ms;
+    double read_p95_ms;
+    double read_p99_ms;
+    uint64_t read_ops;
+    uint64_t write_ops;
+};
+
+int DoBenchmark(const std::string& db_path, const std::string& key_type,
+                const std::string& workload_name, uint32_t num_threads,
+                uint32_t warmup_sec, uint32_t measure_sec,
+                const std::string& output_json) {
+    rocksdb::Options options = GetOptions();
+    rocksdb::DB* db = nullptr;
+    rocksdb::Status s = rocksdb::DB::Open(options, db_path, &db);
+    if (!s.ok()) {
+        std::cerr << "[error] Failed to open DB: " << s.ToString() << "\n";
+        return 1;
+    }
+
+    double read_prob = 1.0;
+    if (workload_name == "Workload_C") {
+        read_prob = 1.0;
+    } else if (workload_name == "Workload_B") {
+        read_prob = 0.95;
+    } else if (workload_name == "Workload_A") {
+        read_prob = 0.50;
+    }
+
+    std::atomic<bool> is_measuring{false};
+    std::atomic<bool> stop_signal{false};
+    std::atomic<uint64_t> next_order_id{10000000ULL};
+    std::atomic<uint64_t> total_read_ops{0};
+    std::atomic<uint64_t> total_write_ops{0};
+
+    std::atomic<uint64_t> interval_read_ops{0};
+    std::atomic<uint64_t> interval_write_ops{0};
+    std::mutex interval_mutex;
+    std::vector<double> interval_latencies_us;
+
+    std::vector<TimeSeriesRecord> time_series;
+    std::vector<std::vector<double>> thread_measured_latencies(num_threads);
+
+    // Monitor thread for 1-second time series recording
+    std::thread monitor_thread([&]() {
+        int sec_counter = 0;
+        while (!stop_signal.load()) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            if (!is_measuring.load()) continue;
+
+            sec_counter++;
+            uint64_t r_ops = interval_read_ops.exchange(0);
+            uint64_t w_ops = interval_write_ops.exchange(0);
+
+            std::vector<double> lats;
+            {
+                std::lock_guard<std::mutex> lock(interval_mutex);
+                lats.swap(interval_latencies_us);
+            }
+
+            double p50 = 0.0, p95 = 0.0, p99 = 0.0;
+            if (!lats.empty()) {
+                std::sort(lats.begin(), lats.end());
+                auto get_p = [&](double p) -> double {
+                    size_t idx = static_cast<size_t>((p / 100.0) * lats.size());
+                    if (idx >= lats.size()) idx = lats.size() - 1;
+                    return lats[idx];
+                };
+                p50 = get_p(50.0) / 1000.0;
+                p95 = get_p(95.0) / 1000.0;
+                p99 = get_p(99.0) / 1000.0;
+            }
+            time_series.push_back({sec_counter, p50, p95, p99, r_ops, w_ops});
+        }
+    });
+
+    // Worker threads
+    auto worker_fn = [&](uint32_t thread_id) {
+        FastRng rng(42 + thread_id * 1000 + 13);
+        ZipfianGenerator zipf(DEFAULT_NUM_TENANTS, 0.99, 42 + thread_id * 777 + 7);
+        char dummy_val[104];
+        std::memset(dummy_val, 'X', 104);
+
+        rocksdb::WriteOptions write_options;
+        write_options.disableWAL = false;
+
+        rocksdb::ReadOptions read_options;
+        if (key_type == "k_opt") {
+            read_options.prefix_same_as_start = true;
+        }
+
+        std::vector<double>& local_lats = thread_measured_latencies[thread_id];
+        local_lats.reserve(200000);
+
+        while (!stop_signal.load()) {
+            double r = static_cast<double>(rng.next() % 1000000) / 1000000.0;
+            bool is_read = (r < read_prob);
+
+            if (is_read) {
+                uint32_t t_id = zipf.next_value();
+                uint8_t st = static_cast<uint8_t>(rng.next_u32(0, 4));
+                uint64_t w_span = 30ULL * 86400 * 1000;
+                uint64_t max_start = WINDOW_MS - w_span;
+                uint64_t start_ts = BASE_TIMESTAMP_MS + (rng.next() % max_start);
+                uint64_t end_ts = start_ts + w_span;
+
+                auto t_start = std::chrono::steady_clock::now();
+                uint32_t matched = 0;
+
+                if (key_type == "k_opt") {
+                    KeyOpt start_k = KeyOpt::make(t_id, st, start_ts, 0);
+                    KeyOpt end_k   = KeyOpt::make(t_id, st, end_ts, 0xFFFFFFFFFFFFFFFFULL);
+                    rocksdb::Slice start_slice(reinterpret_cast<const char*>(&start_k), sizeof(start_k));
+                    rocksdb::Slice end_slice(reinterpret_cast<const char*>(&end_k), sizeof(end_k));
+                    read_options.iterate_upper_bound = &end_slice;
+
+                    rocksdb::Iterator* it = db->NewIterator(read_options);
+                    for (it->Seek(start_slice); it->Valid(); it->Next()) {
+                        const KeyOpt* curr = reinterpret_cast<const KeyOpt*>(it->key().data());
+                        if (curr->get_tenant_id() != t_id || curr->get_status() != st) break;
+                        matched++;
+                    }
+                    delete it;
+                } else {
+                    KeyInv start_k = KeyInv::make(0, st, start_ts, 0);
+                    KeyInv end_k   = KeyInv::make(0xFFFFFFFFU, st, end_ts, 0xFFFFFFFFFFFFFFFFULL);
+                    rocksdb::Slice start_slice(reinterpret_cast<const char*>(&start_k), sizeof(start_k));
+                    rocksdb::Slice end_slice(reinterpret_cast<const char*>(&end_k), sizeof(end_k));
+                    read_options.iterate_upper_bound = &end_slice;
+
+                    rocksdb::Iterator* it = db->NewIterator(read_options);
+                    for (it->Seek(start_slice); it->Valid(); it->Next()) {
+                        const KeyInv* curr = reinterpret_cast<const KeyInv*>(it->key().data());
+                        if (curr->get_status() != st || curr->get_created_at() > end_ts) break;
+                        if (curr->get_tenant_id() == t_id) matched++;
+                    }
+                    delete it;
+                }
+
+                auto t_end = std::chrono::steady_clock::now();
+                double lat_us = std::chrono::duration<double, std::micro>(t_end - t_start).count();
+
+                if (is_measuring.load()) {
+                    local_lats.push_back(lat_us);
+                    interval_read_ops.fetch_add(1, std::memory_order_relaxed);
+                    total_read_ops.fetch_add(1, std::memory_order_relaxed);
+                    if ((rng.next() % 5) == 0) {
+                        std::lock_guard<std::mutex> lock(interval_mutex);
+                        interval_latencies_us.push_back(lat_us);
+                    }
+                }
+            } else {
+                // Write operation
+                uint64_t o_id = next_order_id.fetch_add(1, std::memory_order_relaxed);
+                uint32_t t_id = zipf.next_value();
+                uint8_t st = static_cast<uint8_t>(rng.next_u32(0, 4));
+                uint64_t cr_at = BASE_TIMESTAMP_MS + (rng.next() % WINDOW_MS);
+
+                if (key_type == "k_opt") {
+                    KeyOpt k = KeyOpt::make(t_id, st, cr_at, o_id);
+                    rocksdb::Slice k_slice(reinterpret_cast<const char*>(&k), sizeof(k));
+                    rocksdb::Slice v_slice(dummy_val, sizeof(dummy_val));
+                    db->Put(write_options, k_slice, v_slice);
+                } else {
+                    KeyInv k = KeyInv::make(t_id, st, cr_at, o_id);
+                    rocksdb::Slice k_slice(reinterpret_cast<const char*>(&k), sizeof(k));
+                    rocksdb::Slice v_slice(dummy_val, sizeof(dummy_val));
+                    db->Put(write_options, k_slice, v_slice);
+                }
+
+                if (is_measuring.load()) {
+                    interval_write_ops.fetch_add(1, std::memory_order_relaxed);
+                    total_write_ops.fetch_add(1, std::memory_order_relaxed);
+                }
+            }
+        }
+    };
+
+    std::vector<std::thread> workers;
+    workers.reserve(num_threads);
+    for (uint32_t i = 0; i < num_threads; ++i) {
+        workers.emplace_back(worker_fn, i);
+    }
+
+    // Warm-up phase
+    std::this_thread::sleep_for(std::chrono::seconds(warmup_sec));
+
+    // Measurement phase
+    auto m_start = std::chrono::steady_clock::now();
+    is_measuring.store(true);
+    std::this_thread::sleep_for(std::chrono::seconds(measure_sec));
+    is_measuring.store(false);
+    auto m_end = std::chrono::steady_clock::now();
+
+    stop_signal.store(true);
+    for (auto& w : workers) {
+        if (w.joinable()) w.join();
+    }
+    if (monitor_thread.joinable()) monitor_thread.join();
+
+    delete db;
+
+    double elapsed_sec = std::chrono::duration<double>(m_end - m_start).count();
+    uint64_t total_r = total_read_ops.load();
+    uint64_t total_w = total_write_ops.load();
+
+    // Aggregate all measured latencies
+    std::vector<double> all_lats;
+    size_t total_count = 0;
+    for (const auto& vec : thread_measured_latencies) total_count += vec.size();
+    all_lats.reserve(total_count);
+    for (const auto& vec : thread_measured_latencies) {
+        all_lats.insert(all_lats.end(), vec.begin(), vec.end());
+    }
+
+    double p50 = 0.0, p95 = 0.0, p99 = 0.0, p999 = 0.0, max_val = 0.0;
+    double mean_val = 0.0, variance_val = 0.0, stddev_val = 0.0;
+
+    if (!all_lats.empty()) {
+        std::sort(all_lats.begin(), all_lats.end());
+        auto get_p = [&](double p) -> double {
+            size_t idx = static_cast<size_t>((p / 100.0) * all_lats.size());
+            if (idx >= all_lats.size()) idx = all_lats.size() - 1;
+            return all_lats[idx];
+        };
+        p50 = get_p(50.0) / 1000.0;
+        p95 = get_p(95.0) / 1000.0;
+        p99 = get_p(99.0) / 1000.0;
+        p999 = get_p(99.9) / 1000.0;
+        max_val = all_lats.back() / 1000.0;
+
+        double sum = 0.0;
+        for (double v : all_lats) sum += (v / 1000.0);
+        mean_val = sum / all_lats.size();
+
+        double sum_sq_diff = 0.0;
+        for (double v : all_lats) {
+            double diff = (v / 1000.0) - mean_val;
+            sum_sq_diff += diff * diff;
+        }
+        variance_val = sum_sq_diff / all_lats.size();
+        stddev_val = std::sqrt(variance_val);
+    }
+
+    double r_tput = elapsed_sec > 0 ? (total_r / elapsed_sec) : 0.0;
+    double w_tput = elapsed_sec > 0 ? (total_w / elapsed_sec) : 0.0;
+    double total_tput = elapsed_sec > 0 ? ((total_r + total_w) / elapsed_sec) : 0.0;
+
+    // Output JSON
+    std::ofstream out(output_json);
+    out << std::fixed << std::setprecision(6);
+    out << "{\n"
+        << "  \"system\": \"RocksDB\",\n"
+        << "  \"workload\": \"" << workload_name << "\",\n"
+        << "  \"variant\": \"" << key_type << "\",\n"
+        << "  \"threads\": " << num_threads << ",\n"
+        << "  \"elapsed_sec\": " << elapsed_sec << ",\n"
+        << "  \"read_ops\": " << total_r << ",\n"
+        << "  \"write_ops\": " << total_w << ",\n"
+        << "  \"total_throughput_ops\": " << total_tput << ",\n"
+        << "  \"read_throughput_ops\": " << r_tput << ",\n"
+        << "  \"write_throughput_ops\": " << w_tput << ",\n"
+        << "  \"p50_ms\": " << p50 << ",\n"
+        << "  \"p95_ms\": " << p95 << ",\n"
+        << "  \"p99_ms\": " << p99 << ",\n"
+        << "  \"p999_ms\": " << p999 << ",\n"
+        << "  \"max_ms\": " << max_val << ",\n"
+        << "  \"mean_ms\": " << mean_val << ",\n"
+        << "  \"stddev_ms\": " << stddev_val << ",\n"
+        << "  \"variance_ms2\": " << variance_val << ",\n"
+        << "  \"timeseries\": [\n";
+
+    for (size_t i = 0; i < time_series.size(); ++i) {
+        const auto& ts = time_series[i];
+        out << "    {\"second_idx\": " << ts.second_idx
+            << ", \"read_p50_ms\": " << ts.read_p50_ms
+            << ", \"read_p95_ms\": " << ts.read_p95_ms
+            << ", \"read_p99_ms\": " << ts.read_p99_ms
+            << ", \"read_ops\": " << ts.read_ops
+            << ", \"write_ops\": " << ts.write_ops << "}"
+            << (i + 1 < time_series.size() ? ",\n" : "\n");
+    }
+    out << "  ]\n}\n";
+    out.close();
+
+    return 0;
+}
+
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        std::cerr << "Usage: rdb_benchmark <load|query> [args...]\n";
+        std::cerr << "Usage: rdb_benchmark <load|query|benchmark> [args...]\n";
         return 1;
     }
     std::string cmd = argv[1];
@@ -440,6 +733,12 @@ int main(int argc, char* argv[]) {
             return 1;
         }
         return DoQuery(argv[2], argv[3], std::stoul(argv[4]), argv[5], argv[6]);
+    } else if (cmd == "benchmark") {
+        if (argc < 9) {
+            std::cerr << "Usage: rdb_benchmark benchmark <db_path> <k_opt|k_inv> <workload> <threads> <warmup_sec> <measure_sec> <output_json>\n";
+            return 1;
+        }
+        return DoBenchmark(argv[2], argv[3], argv[4], std::stoul(argv[5]), std::stoul(argv[6]), std::stoul(argv[7]), argv[8]);
     }
     std::cerr << "Unknown command: " << cmd << "\n";
     return 1;
