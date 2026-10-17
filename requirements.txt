@@ -1,0 +1,7 @@
+numpy>=2.0.0
+pandas>=2.2.0
+matplotlib>=3.9.0
+seaborn>=0.13.0
+hdrhistogram>=0.10.8
+psycopg[binary]>=3.2.0
+rocksdict>=0.3.29

@@ -1,0 +1,52 @@
+# ==============================================================================
+# EMPIRICAL BENCHMARK DOCKER COMPOSE INFRASTRUCTURE
+# Project: Empirical Study of Indexing & Key Ordering on Tail Latency
+# Strict Resource Limits: 4 CPU Cores, 4GB RAM
+# ==============================================================================
+
+name: indexing-bench-lab
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: indexing-postgres-bench
+    restart: unless-stopped
+    cpus: '4.0'
+    mem_limit: '4g'
+    shm_size: '1g'
+    environment:
+      POSTGRES_USER: research
+      POSTGRES_PASSWORD: research
+      POSTGRES_DB: indexing_research
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_bench_data:/var/lib/postgresql/data
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U research -d indexing_research"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  rocksdb_runner:
+    build:
+      context: ./rocksdb
+      dockerfile: Dockerfile
+    container_name: indexing-rocksdb-runner
+    cpus: '4.0'
+    mem_limit: '4g'
+    volumes:
+      - ../:/app
+      - rocksdb_benchmark_data:/data
+    working_dir: /app
+    command: ["python", "-c", "print('RocksDB runner container ready.')"]
+
+volumes:
+  postgres_bench_data:
+  rocksdb_benchmark_data:
