@@ -1,0 +1,17 @@
+archetype,system,variant,threads,operation,throughput_ops,p50_ms,p95_ms,p99_ms,p999_ms,max_ms,variance_ms2,heap_fetches,shared_read_blocks,shared_hit_blocks,wal_or_disk_bytes
+Loại 2: Master Data,PostgreSQL 17,I_MD_STD,1,Index Scan,1583.86,0.532,0.928,1.147,1.813,17.103,0.03783,1,2,1,0
+Loại 2: Master Data,PostgreSQL 17,I_MD_COV,1,Index Only Scan,1603.21,0.522,0.929,1.137,1.682,5.135,0.030206,0,2,1,0
+Loại 2: Master Data,PostgreSQL 17,I_MD_INV,1,Index Scan,950.67,0.903,1.547,1.914,3.753,16.223,0.113165,1,51,1,0
+Loại 2: Master Data,RocksDB 9.10,K_MD_BLOOM_GET,1,Point Get() with Whole-Key Bloom,139120.8,0.002,0.003,0.012,0.025,0.103,4e-06,0,0,1,0
+Loại 3: Event Log,PostgreSQL 17,TIME_LEAD,1,100% Insert Ingestion (TIME_LEAD),1542.27,0.541,0.977,1.285,2.167,28.303,0.049417,0,0,0,25405732
+Loại 3: Event Log,RocksDB 9.10,TIME_LEAD,1,100% Insert Ingestion (TIME_LEAD),54935.06,0.008,0.019,0.03,0.065,2.241,0.000112,0,0,0,2914110
+Loại 3: Event Log,PostgreSQL 17,TIME_LEAD,8,100% Insert Ingestion (TIME_LEAD),5840.79,1.11,2.355,4.483,10.639,29.807,0.788189,0,0,0,27367385
+Loại 3: Event Log,RocksDB 9.10,TIME_LEAD,8,100% Insert Ingestion (TIME_LEAD),60348.62,0.007,0.017,0.028,0.086,286.975,2.317093,0,0,0,2895216
+Loại 3: Event Log,PostgreSQL 17,TIME_LEAD,16,100% Insert Ingestion (TIME_LEAD),5556.17,2.283,5.851,10.511,23.487,63.679,4.363085,0,0,0,27359208
+Loại 3: Event Log,RocksDB 9.10,TIME_LEAD,16,100% Insert Ingestion (TIME_LEAD),61069.47,0.007,0.015,0.029,0.098,217.471,2.019241,0,0,0,2895725
+Loại 3: Event Log,PostgreSQL 17,TENANT_LEAD,1,100% Insert Ingestion (TENANT_LEAD),1631.83,0.515,0.924,1.203,1.956,6.155,0.033672,0,0,0,29058778
+Loại 3: Event Log,RocksDB 9.10,TENANT_LEAD,1,100% Insert Ingestion (TENANT_LEAD),49945.53,0.009,0.023,0.036,0.095,0.595,5.9e-05,0,0,0,3388386
+Loại 3: Event Log,PostgreSQL 17,TENANT_LEAD,8,100% Insert Ingestion (TENANT_LEAD),5896.52,1.126,2.353,3.939,8.107,29.263,0.549822,0,0,0,26999248
+Loại 3: Event Log,RocksDB 9.10,TENANT_LEAD,8,100% Insert Ingestion (TENANT_LEAD),43314.94,0.01,0.022,0.035,0.133,233.727,4.301476,0,0,0,3371134
+Loại 3: Event Log,PostgreSQL 17,TENANT_LEAD,16,100% Insert Ingestion (TENANT_LEAD),5837.19,2.277,5.243,8.743,18.751,77.439,3.268502,0,0,0,26878160
+Loại 3: Event Log,RocksDB 9.10,TENANT_LEAD,16,100% Insert Ingestion (TENANT_LEAD),42762.94,0.01,0.024,0.042,0.137,181.631,2.601124,0,0,0,3373621
