@@ -8,4 +8,5 @@ src/rocksdb_exp/rdb_benchmark
 *.so
 *.o
 *.exe
-
+cloud_archive_bundle/
+scripts/
