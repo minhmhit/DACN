@@ -30,7 +30,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onSel
     },
     {
       key: 'theory' as TabKey,
-      label: '4. Lý thuyết & Đuôi Nặng',
+      label: '4. Lý thuyết & Tail latency',
       sublabel: 'Pollaczek-Khinchine, CDF, Spikes',
       icon: Activity,
     },
@@ -53,16 +53,14 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onSel
               <button
                 key={tab.key}
                 onClick={() => onSelectTab(tab.key)}
-                className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-medium text-xs sm:text-sm whitespace-nowrap transition-all duration-200 ${
-                  isActive
+                className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-medium text-xs sm:text-sm whitespace-nowrap transition-all duration-200 ${isActive
                     ? 'bg-white text-blue-900 shadow-sm border border-slate-200/80 font-bold'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-                }`}
+                  }`}
               >
                 <Icon
-                  className={`w-4 h-4 ${
-                    isActive ? 'text-blue-700' : 'text-slate-400'
-                  }`}
+                  className={`w-4 h-4 ${isActive ? 'text-blue-700' : 'text-slate-400'
+                    }`}
                 />
                 <div className="text-left">
                   <div>{tab.label}</div>

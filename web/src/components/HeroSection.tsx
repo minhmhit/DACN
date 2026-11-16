@@ -4,16 +4,24 @@ import { TabKey } from './NavigationTabs';
 
 interface HeroSectionProps {
   onSelectTab: (tab: TabKey) => void;
-  onOpenCalculator: () => void;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ onSelectTab, onOpenCalculator }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({ onSelectTab }) => {
   const jumpToTab = (tab: TabKey) => {
     onSelectTab(tab);
     const contentEl = document.getElementById('content-area');
     if (contentEl) {
       const yOffset = -70;
       const y = contentEl.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+
+  const scrollToCalculator = () => {
+    const calcEl = document.getElementById('calculator');
+    if (calcEl) {
+      const yOffset = -70;
+      const y = calcEl.getBoundingClientRect().top + window.pageYOffset + yOffset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
   };
@@ -44,7 +52,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSelectTab, onOpenCal
             Nghiên cứu &amp; Thực nghiệm Ảnh hưởng của Đánh Chỉ mục đến Hiệu năng Truy vấn
           </h1>
           <p className="text-sm text-slate-600 font-sans leading-relaxed">
-            Giải mã cơ chế vi kiến trúc dẫn đến sự bùng nổ độ trễ đuôi nặng (<span className="font-semibold text-slate-900">p99 / p99.9</span>) 
+            Giải mã cơ chế vi kiến trúc dẫn đến sự bùng nổ độ trễ đuôi (<span className="font-semibold text-slate-900">p99 / p99.9</span>)
             và kiểm chứng thực nghiệm bằng <span className="font-semibold text-blue-700">Định lý hàng đợi Pollaczek-Khinchine</span>.
           </p>
         </div>
@@ -56,14 +64,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSelectTab, onOpenCal
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold shadow-sm transition-all hover:shadow hover:-translate-y-0.5"
           >
             <BookOpen className="w-4 h-4" />
-            Tra cứu Quy ước Thiết kế
+            Tra cứu 8 Quy ước Thiết kế
           </button>
           <button
-            onClick={onOpenCalculator}
+            onClick={scrollToCalculator}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold border border-slate-300 transition-colors"
           >
             <Layers className="w-4 h-4 text-slate-600" />
-            Mở Playground So sánh
+            Đến Playground So sánh
           </button>
         </div>
       </div>
@@ -71,7 +79,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSelectTab, onOpenCal
       {/* 4 Highlight Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2 border-t border-slate-100">
         {/* Card 1 */}
-        <div 
+        <div
           onClick={() => jumpToTab('rocksdb')}
           className="p-4 rounded-xl bg-red-50/70 border border-red-200 hover:shadow-md hover:bg-red-50 cursor-pointer transition-all"
         >
@@ -88,7 +96,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSelectTab, onOpenCal
         </div>
 
         {/* Card 2 */}
-        <div 
+        <div
           onClick={() => jumpToTab('rocksdb')}
           className="p-4 rounded-xl bg-amber-50/70 border border-amber-200 hover:shadow-md hover:bg-amber-50 cursor-pointer transition-all"
         >
@@ -105,7 +113,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSelectTab, onOpenCal
         </div>
 
         {/* Card 3 */}
-        <div 
+        <div
           onClick={() => jumpToTab('postgres')}
           className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 hover:shadow-md hover:bg-blue-50 cursor-pointer transition-all"
         >
@@ -122,7 +130,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSelectTab, onOpenCal
         </div>
 
         {/* Card 4 */}
-        <div 
+        <div
           onClick={() => jumpToTab('theory')}
           className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 hover:shadow-md hover:bg-emerald-50 cursor-pointer transition-all"
         >
@@ -141,4 +149,3 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onSelectTab, onOpenCal
     </section>
   );
 };
-

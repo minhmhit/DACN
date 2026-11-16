@@ -9,11 +9,10 @@ import { RocksdbTab } from './components/tabs/RocksdbTab';
 import { QueueingTheoryTab } from './components/tabs/QueueingTheoryTab';
 import { RulebookTab } from './components/tabs/RulebookTab';
 import { TabKey } from './components/NavigationTabs';
-import { BookOpen, ArrowUp, CheckCircle2, Sliders } from 'lucide-react';
+import { BookOpen, ArrowUp, CheckCircle2 } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
-  const [showCalculator, setShowCalculator] = useState<boolean>(false);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     imageSrc: string;
@@ -65,60 +64,24 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
-      {/* 1. Slim, Compact Sticky Navbar (Only 56px height, does not hog the screen) */}
+      {/* 1. Slim, Compact Sticky Navbar (Only 56px height, no overflow-x, zero screen hogging) */}
       <Navbar
         activeTab={activeTab}
         onSelectTab={handleTabChange}
-        showCalculator={showCalculator}
-        onToggleCalculator={() => setShowCalculator((prev) => !prev)}
       />
 
       {/* 2. Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Hero Section (In normal page flow, scrolls away naturally) */}
-        <HeroSection
-          onSelectTab={handleTabChange}
-          onOpenCalculator={() => {
-            setShowCalculator(true);
-            const calcEl = document.getElementById('calculator-section');
-            if (calcEl) {
-              calcEl.scrollIntoView({ behavior: 'smooth' });
-            }
-          }}
-        />
+        <HeroSection onSelectTab={handleTabChange} />
 
-        {/* Collapsible / Toggleable Metric Comparison Playground */}
-        {showCalculator && (
-          <div id="calculator-section" className="animate-fadeIn">
-            <MetricCalculator />
-          </div>
-        )}
-
-        {/* Quick Playground Toggle Banner if not opened */}
-        {!showCalculator && (
-          <div className="flex items-center justify-between p-3.5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-xl">
-            <div className="flex items-center gap-2.5">
-              <span className="p-1.5 rounded-lg bg-blue-600 text-white">
-                <Sliders className="w-4 h-4" />
-              </span>
-              <div>
-                <span className="text-xs font-bold text-blue-950">Metric Comparison Playground</span>
-                <span className="text-xs text-slate-600 hidden sm:inline ml-2">
-                  — Chọn và đối sánh side-by-side tức thì giữa cấu hình Optimal và Inverted
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowCalculator(true)}
-              className="px-3 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold transition-colors shrink-0 shadow-sm"
-            >
-              Mở So Sánh Nhanh
-            </button>
-          </div>
-        )}
+        {/* Metric Comparison Playground (Always Shown) */}
+        <div id="calculator">
+          <MetricCalculator />
+        </div>
 
         {/* 3. Tab Content Display Area */}
-        <div id="content-area" className="scroll-mt-20">
+        <div id="content-area" className="scroll-mt-20 pt-2">
           {activeTab === 'overview' && <OverviewTab />}
           {activeTab === 'postgres' && (
             <PostgresTab onOpenImageModal={handleOpenImageModal} />

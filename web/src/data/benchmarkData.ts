@@ -162,7 +162,7 @@ export const comparisonDimensions: ComparisonDimension[] = [
     dimension: 'Mục tiêu tối ưu hóa (Optimization Goal)',
     traditional: 'Cắt giảm chi phí CBO trung bình ước lượng (Estimated Cost)',
     aiDrl: 'Cực đại hóa thông lượng trung bình (p50) hoặc tổng thời gian chạy',
-    ourRulebook: 'Kiểm soát Phương sai dịch vụ σ² & Triệt tiêu độ trễ đuôi nặng (p99, p99.9)',
+    ourRulebook: 'Kiểm soát Phương sai dịch vụ σ² & Triệt tiêu độ trễ đuôi (p99, p99.9)',
   },
   {
     dimension: 'Cơ chế bảo vệ bộ nhớ work_mem',
