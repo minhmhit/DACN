@@ -98,3 +98,4 @@ export const ImageModal: React.FC<ImageModalProps> = ({
     </div>
   );
 };
+

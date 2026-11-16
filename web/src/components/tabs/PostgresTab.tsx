@@ -289,3 +289,4 @@ export const PostgresTab: React.FC<PostgresTabProps> = ({ onOpenImageModal }) =>
     </div>
   );
 };
+

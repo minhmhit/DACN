@@ -11,3 +11,5 @@ src/rocksdb_exp/rdb_benchmark
 cloud_archive_bundle/
 scripts/
 docs/
+web/node_modules/
+web/dist/

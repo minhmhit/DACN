@@ -78,3 +78,4 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onSel
     </div>
   );
 };
+

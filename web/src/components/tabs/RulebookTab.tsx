@@ -290,3 +290,4 @@ export const RulebookTab: React.FC = () => {
     </div>
   );
 };
+
