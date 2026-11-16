@@ -10,3 +10,4 @@ src/rocksdb_exp/rdb_benchmark
 *.exe
 cloud_archive_bundle/
 scripts/
+docs/
