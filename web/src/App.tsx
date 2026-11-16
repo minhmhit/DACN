@@ -8,7 +8,7 @@ import { PostgresTab } from './components/tabs/PostgresTab';
 import { RocksdbTab } from './components/tabs/RocksdbTab';
 import { QueueingTheoryTab } from './components/tabs/QueueingTheoryTab';
 import { RulebookTab } from './components/tabs/RulebookTab';
-import { BookOpen, Github, ArrowUp, Layers, CheckCircle2 } from 'lucide-react';
+import { BookOpen, ArrowUp, CheckCircle2 } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
@@ -98,10 +98,7 @@ export const App: React.FC = () => {
             <p className="text-slate-500">
               Đồ án chuyên ngành Cơ sở dữ liệu • Báo cáo khoa học Chương 3 &amp; Quy ước thiết kế định lượng.
             </p>
-            <div className="flex items-center justify-center sm:justify-start gap-2 pt-1 text-[11px] text-emerald-600 font-semibold">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Sẵn sàng triển khai 1-click lên Vercel • Zero-Hallucination Verified</span>
-            </div>
+
           </div>
 
           <div className="flex items-center gap-3">

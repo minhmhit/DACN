@@ -10,8 +10,6 @@ export const Header: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span className="text-slate-400">ĐỀ TÀI ĐỒ ÁN CHUYÊN NGÀNH CƠ SỞ DỮ LIỆU</span>
-            <span className="text-slate-600">|</span>
-            <span className="text-emerald-400 font-semibold">100% Zero-Hallucination & Empirical Verified</span>
           </div>
           <div className="flex items-center gap-4 text-slate-400">
             <span>PostgreSQL 17 (B-Tree CBO)</span>
@@ -33,7 +31,7 @@ export const Header: React.FC = () => {
               Nghiên cứu & Thực nghiệm Ảnh hưởng của Đánh Chỉ mục đến Hiệu năng Truy vấn
             </h1>
             <p className="text-sm sm:text-base text-slate-600 font-sans leading-relaxed">
-              Giải mã cơ chế vật lý dẫn đến sự bùng nổ độ trễ đuôi nặng (<span className="font-semibold text-slate-800">p99 / p99.9</span>) 
+              Giải mã cơ chế vật lý dẫn đến sự bùng nổ độ trễ đuôi nặng (<span className="font-semibold text-slate-800">p99 / p99.9</span>)
               và kiểm chứng thực nghiệm bằng <span className="font-semibold text-blue-700">Định lý hàng đợi Pollaczek-Khinchine</span>.
             </p>
           </div>

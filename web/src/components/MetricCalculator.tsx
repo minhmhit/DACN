@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sliders, ArrowRight, TrendingUp, TrendingDown, Clock, Activity, Zap } from 'lucide-react';
+import { Sliders, TrendingUp, TrendingDown, Activity, Zap } from 'lucide-react';
 import { postgresBenchmarkData, rocksdbBenchmarkData } from '../data/benchmarkData';
 
 export const MetricCalculator: React.FC = () => {

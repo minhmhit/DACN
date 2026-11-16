@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Binary, AlertOctagon, ZoomIn, FileText, Filter, CheckCircle2, XCircle, Cpu, HardDrive } from 'lucide-react';
+import { Binary, AlertOctagon, ZoomIn, FileText, Filter, CheckCircle2, XCircle, Cpu } from 'lucide-react';
 import { rocksdbBenchmarkData, perfContextTelemetries } from '../../data/benchmarkData';
 import { BenchmarkRow } from '../../types/benchmark';
 

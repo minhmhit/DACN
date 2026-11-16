@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, Clock, ZoomIn, Sigma, CheckCircle, TrendingUp, Cpu, Server } from 'lucide-react';
+import { ZoomIn, Sigma, CheckCircle, TrendingUp } from 'lucide-react';
 
 interface QueueingTheoryTabProps {
   onOpenImageModal: (src: string, title: string, caption: string, analysis?: string) => void;
